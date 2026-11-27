@@ -1141,7 +1141,7 @@ html,body{margin:0;height:100%;background:#F0F0F0;overflow:hidden}
 <script>
 {
 const $=id=>document.getElementById(id);
-const P={T:10,Tr:4,Aa:16,Ac:35,Ae:10,Sg:140,Lm:600,Sc:10};
+const P={T:10,Tr:4,Aa:12,Ac:26,Ae:17,Sg:240,Lm:950,Dir:20,Sc:10};  // wave: one long, gentle swell sweeping across the whole wall
 const stage=$('stage');
 let renderer=null;
 for(const mk of [()=>new THREE.WebGLRenderer({antialias:true}),()=>new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'}),()=>new THREE.WebGL1Renderer({antialias:false,powerPreference:'low-power'})]){try{renderer=mk();break;}catch(e){}}
@@ -1156,7 +1156,7 @@ const controls=new THREE.OrbitControls(cam,renderer.domElement);
 controls.enableDamping=true;controls.enablePan=false;controls.minDistance=110;controls.minAzimuthAngle=-.7;controls.maxAzimuthAngle=.7;controls.minPolarAngle=Math.PI/2-.6;controls.maxPolarAngle=Math.PI/2+.6;controls.maxDistance=400;
 cam.position.set(0,0,190);controls.target.set(0,2,0);controls.update();
 scene.add(new THREE.HemisphereLight(0xffffff,0x6e6a66,.095));
-const spot=new THREE.SpotLight(0xfff0dc,1.35,0,Math.PI/4.2,.75,0);
+const spot=new THREE.SpotLight(0xfff0dc,1.12,0,Math.PI/4.2,.75,0);
 spot.position.set(150,150,170);spot.target.position.set(-15,-15,0);
 spot.castShadow=true;spot.shadow.mapSize.set(4096,4096);spot.shadow.camera.near=50;spot.shadow.camera.far=500;spot.shadow.bias=-0.0003;
 scene.add(spot,spot.target);
@@ -1194,7 +1194,7 @@ loadData().then(([meta,buf])=>{
     const pivot=new THREE.Group();pivot.position.set(m.pin[0]-C[0],m.pin[1]-C[1]+6,DZ+2.6);mesh.position.z=-2.6;pivot.add(mesh);wall.add(pivot);
     const post=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,DZ+.2,20),postMat);post.rotation.x=Math.PI/2;post.position.set(pivot.position.x,pivot.position.y,1+DZ/2);post.castShadow=true;wall.add(post);
     const dx=m.pin[0]-C[0],dy=m.pin[1]-C[1];
-    pieces.push({pivot,fixed:m.fixed,r:Math.hypot(dx,dy)});
+    pieces.push({pivot,fixed:m.fixed,r:Math.hypot(dx,dy),dx,dy});
   });
 });
 
@@ -1215,7 +1215,8 @@ function loop(now){
   for(const p of pieces){
     if(p.fixed)continue;
     const rr=p.r*P.Sc,A=P.Ae+(P.Ac-P.Ae)*Math.exp(-((rr/P.Sg)**2));
-    const th=(1-b)*thA+b*A*Math.sin(w-2*Math.PI*rr/P.Lm);
+    const da=P.Dir*Math.PI/180,u=(p.dx*Math.cos(da)+p.dy*Math.sin(da))*P.Sc;   // position along the travel direction
+    const th=(1-b)*thA+b*A*Math.sin(w-2*Math.PI*u/P.Lm);
     p.pivot.rotation.y=th*Math.PI/180;   // tilt left / right about the vertical axis
   }
   controls.update();renderer.render(scene,cam);requestAnimationFrame(loop);
